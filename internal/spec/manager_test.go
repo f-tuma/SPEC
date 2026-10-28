@@ -33,6 +33,7 @@ func managerFixture(t *testing.T) (*Manager, string, string) {
 	t.Setenv("HOME", filepath.Join(base, "home"))
 	return New(os.DirFS("../../plugin")), project, filepath.Join(base, "cache")
 }
+
 // jsonText quotes a value for JSON fixtures; Windows paths contain backslashes.
 func jsonText(value string) string {
 	data, _ := json.Marshal(value)
