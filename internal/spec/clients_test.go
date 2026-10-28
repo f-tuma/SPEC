@@ -220,7 +220,7 @@ func TestUninstallRemovesOnlyWhatSPECSetUp(t *testing.T) {
 // claudeInstalled writes Claude Code's own records of a project install.
 func claudeInstalled(t *testing.T, project, name string) {
 	home := os.Getenv("CLAUDE_CONFIG_DIR")
-	put(t, filepath.Join(home, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"spec@`+name+`": [{"scope": "project", "projectPath": "`+project+`"}]}}`)
+	put(t, filepath.Join(home, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"spec@`+name+`": [{"scope": "project", "projectPath": `+jsonText(project)+`}]}}`)
 	put(t, filepath.Join(home, "plugins/known_marketplaces.json"), `{"`+name+`": {}}`)
 }
 

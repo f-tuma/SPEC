@@ -283,7 +283,9 @@ func TestSourceBuildWrapperKeepsCallerDirectory(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v: %s", err, out)
 	}
-	if string(out) != f.root+"\ninstall\n--project\n.\n--dry-run\n" {
+	// pwd prints the physical directory, as on macOS /private/var.
+	root, _ := filepath.EvalSymlinks(f.root)
+	if string(out) != root+"\ninstall\n--project\n.\n--dry-run\n" {
 		t.Fatal("source wrapper changed caller-relative paths:", string(out))
 	}
 }

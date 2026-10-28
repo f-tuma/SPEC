@@ -22,10 +22,21 @@ func managerFixture(t *testing.T) (*Manager, string, string) {
 	if err := os.Mkdir(project, 0755); err != nil {
 		t.Fatal(err)
 	}
+	// SPEC resolves symlinks in the project path (macOS keeps temporary
+	// directories under /var -> /private/var), so tests use that form too.
+	project, err := filepath.EvalSymlinks(project)
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Setenv("CODEX_HOME", filepath.Join(base, "codex-home"))
 	t.Setenv("CLAUDE_CONFIG_DIR", filepath.Join(base, "claude-home"))
 	t.Setenv("HOME", filepath.Join(base, "home"))
 	return New(os.DirFS("../../plugin")), project, filepath.Join(base, "cache")
+}
+// jsonText quotes a value for JSON fixtures; Windows paths contain backslashes.
+func jsonText(value string) string {
+	data, _ := json.Marshal(value)
+	return string(data)
 }
 func put(t *testing.T, path, content string) {
 	t.Helper()

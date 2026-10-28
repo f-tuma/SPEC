@@ -22,7 +22,7 @@ func fakeEGMClients(t *testing.T, m *Manager, project string) *[]string {
 		case "/bin/claude plugin marketplace add google/elephant-goldfish-model#v0.1.0":
 			put(t, filepath.Join(claude, "plugins/known_marketplaces.json"), `{"egm": {"source": {"source": "github", "repo": "google/elephant-goldfish-model", "ref": "v0.1.0"}}}`)
 		case "/bin/claude plugin install egm@egm --scope project":
-			put(t, filepath.Join(claude, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"egm@egm": [{"scope": "project", "projectPath": "`+project+`"}]}}`)
+			put(t, filepath.Join(claude, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"egm@egm": [{"scope": "project", "projectPath": `+jsonText(project)+`}]}}`)
 		case "/bin/claude plugin uninstall egm@egm --scope project":
 			put(t, filepath.Join(claude, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {}}`)
 		case "/bin/codex plugin marketplace add google/elephant-goldfish-model --ref v0.1.0":
@@ -154,7 +154,7 @@ func TestEGMAlreadyInstalledByTheUserIsLeftAlone(t *testing.T) {
 	setReview(project, "egm")
 	home := os.Getenv("CLAUDE_CONFIG_DIR")
 	put(t, filepath.Join(home, "plugins/known_marketplaces.json"), `{"egm": {"source": {"source": "github", "repo": "google/elephant-goldfish-model"}}}`)
-	put(t, filepath.Join(home, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"egm@egm": [{"scope": "project", "projectPath": "`+project+`"}]}}`)
+	put(t, filepath.Join(home, "plugins/installed_plugins.json"), `{"version": 2, "plugins": {"egm@egm": [{"scope": "project", "projectPath": `+jsonText(project)+`}]}}`)
 	calls := fakeEGMClients(t, m, project)
 	plugins, _, err := m.setupReview(context.Background(), project, []string{"claude"})
 	if err != nil || len(*calls) != 0 {

@@ -190,7 +190,8 @@ func TestSwitchProjectValidatesAndCancelKeepsOriginal(t *testing.T) {
 		t.Fatal("cancel did not restore original project")
 	}
 	m, _ = choose(t, m, "Switch project")
-	next := t.TempDir()
+	// Opening resolves symlinks, such as macOS's /var -> /private/var.
+	next, _ := filepath.EvalSymlinks(t.TempDir())
 	m.project.SetValue(next)
 	m, cmd = press(m, tea.KeyEnter)
 	if cmd == nil || !m.busy || m.options.Project != next || m.workspace.status != nil {

@@ -327,7 +327,15 @@ func claudeRegistration(project, name string) (installed, marketplace bool) {
 	return claudeProjectInstall(project, "spec@"+name), known || unknown
 }
 
+// samePath compares two directories, also through symlinks such as macOS's
+// /var -> /private/var: a client may record either form.
 func samePath(a, b string) bool {
+	if resolved, err := filepath.EvalSymlinks(a); err == nil {
+		a = resolved
+	}
+	if resolved, err := filepath.EvalSymlinks(b); err == nil {
+		b = resolved
+	}
 	a, b = filepath.Clean(a), filepath.Clean(b)
 	if runtime.GOOS == "windows" {
 		return strings.EqualFold(a, b)

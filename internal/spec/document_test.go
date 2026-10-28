@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -36,7 +37,7 @@ func TestDocumentWriteIsGuardedAndPreservesMode(t *testing.T) {
 	if err != nil || next == digest {
 		t.Fatal(next, err)
 	}
-	if info, _ := os.Stat(path); info.Mode().Perm() != 0o600 {
+	if info, _ := os.Stat(path); runtime.GOOS != "windows" && info.Mode().Perm() != 0o600 {
 		t.Fatal("file mode changed:", info.Mode())
 	}
 	if _, err = WriteDocument(project, "DESIGN.md", "third", digest); err == nil || !strings.Contains(err.Error(), "changed on disk") {
