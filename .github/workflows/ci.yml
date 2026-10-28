@@ -1,0 +1,88 @@
+name: SPEC
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.26.10'
+          cache: true
+      - run: go mod verify
+      - run: go test ./...
+      - run: go vet ./...
+      - name: Check formatting
+        shell: bash
+        run: test -z "$(gofmt -l .)"
+      - name: Race detector
+        if: runner.os == 'Linux'
+        run: go test -race ./...
+      - name: Build native binary
+        run: go build -trimpath -o bin/ .
+      - name: Native Windows binary installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./scripts/test-install.ps1
+      - name: Native Linux and macOS binary installer
+        if: runner.os != 'Windows'
+        run: sh scripts/test-install.sh
+      - name: Verify embedded plugin through built executable
+        shell: bash
+        run: |
+          SPEC_SMOKE_PROJECT="$(mktemp -d)"
+          SPEC_SMOKE_CACHE="$(mktemp -d)"
+          SPEC_SMOKE_PROJECT_ARG="$SPEC_SMOKE_PROJECT"
+          SPEC_SMOKE_CACHE_ARG="$SPEC_SMOKE_CACHE"
+          SPEC_SMOKE_BIN="$PWD/bin/SPEC"
+          if [ "$RUNNER_OS" = Windows ]; then
+            SPEC_SMOKE_BIN="$PWD/bin/SPEC.exe"
+            SPEC_SMOKE_PROJECT_ARG="$(cygpath -w "$SPEC_SMOKE_PROJECT")"
+            SPEC_SMOKE_CACHE_ARG="$(cygpath -w "$SPEC_SMOKE_CACHE")"
+          fi
+          cd "$RUNNER_TEMP"
+          "$SPEC_SMOKE_BIN" --version
+          "$SPEC_SMOKE_BIN" install --project "$SPEC_SMOKE_PROJECT_ARG" --cache-dir "$SPEC_SMOKE_CACHE_ARG" --dry-run --no-register
+          test ! -e "$SPEC_SMOKE_PROJECT/.spec"
+
+  release:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16
+        with:
+          go-version: '1.26.10'
+      - run: sh scripts/release.sh
+      - name: Publish tested version once
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SPEC_RELEASE_COMMIT: ${{ github.sha }}
+        run: |
+          SPEC_RELEASE_VERSION="$(go run . --version)"
+          SPEC_RELEASE_TAG="v${SPEC_RELEASE_VERSION}"
+          if gh release view "$SPEC_RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release already exists; existing tags and assets are unchanged."
+            exit 0
+          fi
+          if gh api "repos/$GH_REPO/git/ref/tags/$SPEC_RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Tag exists without a release; inspect it before publishing."
+            exit 1
+          fi
+          gh release create "$SPEC_RELEASE_TAG" dist/* --target "$SPEC_RELEASE_COMMIT" --title "SPEC ${SPEC_RELEASE_VERSION}" --notes "Native Go binary with Charm TUI and embedded agent plugin. Verify the archive with SHA256SUMS; see README for setup and verification limits."

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "spec",
+  "version": "0.4.0",
+  "description": "Guide bounded spec-driven coding work, reuse project sources, and check document structure and evidence freshness.",
+  "author": {
+    "name": "f-tuma"
+  },
+  "license": "MIT",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "SPEC",
+        "shortDescription": "Specifications, tests and review",
+        "longDescription": "Three local coding workflows: project orientation and planning, fresh-context design review, and bounded implementation with verification. Includes a companion Go CLI checker for mapped documents and evidence hashes. Semantic judgments and project checks remain explicit.",
+        "developerName": "f-tuma",
+        "category": "Productivity",
+        "capabilities": [],
+        "defaultPrompt": "Use SPEC to define this project and guide its next spec-driven step."
+      }
+    }
+  }
+}

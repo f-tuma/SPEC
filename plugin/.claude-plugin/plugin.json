@@ -1,0 +1,9 @@
+{
+  "name": "spec",
+  "version": "0.4.0",
+  "description": "Guide bounded spec-driven coding work, reuse project sources, and check document structure and evidence freshness.",
+  "author": {
+    "name": "f-tuma"
+  },
+  "license": "MIT"
+}

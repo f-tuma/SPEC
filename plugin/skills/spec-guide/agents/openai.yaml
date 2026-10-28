@@ -1,0 +1,4 @@
+interface:
+  display_name: "SPEC"
+  short_description: "Define a project and guide spec-driven development"
+  default_prompt: "Use $spec-guide to define this project and choose its next useful step."
